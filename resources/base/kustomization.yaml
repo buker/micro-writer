@@ -1,0 +1,17 @@
+---
+
+namespace: default
+
+resources:
+  - clusterrole.yaml
+  - deployment.yaml
+  - rolebinding.yaml
+
+configMapGenerator:
+  - name: micro-writer-env
+    envs:
+      - app.env
+  - name: micro-writer-migrations
+    files:
+      - ../../postgres/migrations/001_create_schema.sql
+

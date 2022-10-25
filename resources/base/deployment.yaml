@@ -1,0 +1,61 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: micro-writer
+  labels:
+    app: micro-writer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: micro-writer
+  template:
+    metadata:
+      labels:
+        app: micro-writer
+    spec:
+      initContainers:
+      - name: micro-writer-migrations
+        securityContext:
+          allowPrivilegeEscalation: false
+        image: golang:alpine
+        envFrom:
+        - configMapRef:
+            name: micro-writer-env
+        - secretRef:
+            name: micro-writer-postgres-env
+        volumeMounts:
+          - mountPath: /migrations
+            name: migrations
+        command:
+          - sh
+          - "-c"
+          - |
+            go install github.com/jackc/tern@latest
+            tern migrate --migrations /migrations
+      containers:
+      - name: micro-writer
+        securityContext:
+          allowPrivilegeEscalation: false
+        image: micro-writer:latest
+        envFrom:
+        - configMapRef:
+            name: micro-writer-env
+        - secretRef:
+            name: micro-writer-postgres-env
+        readinessProbe:
+          grpc:
+            port: 41888
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        livenessProbe:
+          grpc:
+            port: 41888
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: migrations
+        configMap:
+          name: micro-writer-migrations

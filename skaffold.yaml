@@ -1,0 +1,16 @@
+---
+
+apiVersion: skaffold/v2beta21
+kind: Config
+metadata:
+  name: micro-writer
+build:
+  artifacts:
+  - image: micro-writer
+deploy:
+  kustomize:
+    paths:
+      - ./resources/dev/
+    buildArgs:
+      - load-restrictor LoadRestrictionsNone
+
